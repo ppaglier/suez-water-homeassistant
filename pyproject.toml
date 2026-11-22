@@ -1,0 +1,123 @@
+[tool.poetry]
+name = "suez-water-homeassistant"
+version = "1.0.0-rc.1"
+description = "Suez-water integration in Home Assistant"
+authors = ["Pierre-Louis Pagliero"]
+license = "MIT"
+readme = "README.md"
+packages = [{ include = "custom_components" }]
+
+
+[tool.taskipy.tasks]
+"lint" = { cmd = "ruff check", help = "Check linting accross the project" }
+"lint:fix" = { cmd = "ruff check --fix", help = "Check linting accross the project & autofix errors" }
+"format" = { cmd = "ruff format --check", help = "Check formatter accross the project" }
+"format:fix" = { cmd = "ruff format", help = "Check formatter accross the project & autofix errors" }
+"typecheck" = { cmd = "mypy custom_components", help = "Check typing accross the project" }
+
+# Test tasks
+"test:miss" = { cmd = "! pytest --collect-only -m 'not unit and not integration and not e2e' -q", help = "Find tests that are not marked at all" }
+"test:unit" = { cmd = "pytest -m unit --cov=custom_components --cov-append", help = "Runs all unit tests" }
+"test:integration" = { cmd = "pytest -m integration --cov=custom_components --cov-append", help = "Runs all integration tests" }
+"test:e2e" = { cmd = "pytest -m e2e --cov=custom_components --cov-append", help = "Runs all e2e tests" }
+"test:all" = { cmd = "pytest --cov=custom_components --cov-append", help = "Runs all tests" }
+"test:cov" = { cmd = "pytest --cov=custom_components --cov-report html:coverage --cov-report term --cov-fail-under=95", help = "Runs all tests for coverage with minimum 95% requirement" }
+"test:cov:report" = { cmd = "coverage report --fail-under=95", help = "Check coverage with minimum 95% requirement" }
+"test:cov:lib" = { cmd = "pytest --cov=custom_components/suez_water --cov-report html:coverage --cov-report term", help = "Runs all tests in lib for coverage" }
+
+
+[tool.pytest.ini_options]
+cache_dir = ".venv/.pytest_cache"
+addopts = "--strict-markers --ignore=.venv --import-mode=importlib"
+markers = [
+    "unit: units tests",
+    "integration: integration tests",
+    "e2e: end to end tests",
+]
+asyncio_mode = "auto"
+
+[tool.pytest_env]
+ENVIRONMENT = "test"
+
+[tool.coverage.run]
+omit = [
+    "**/tests/*",
+]
+
+[tool.ruff]
+line-length = 120
+cache-dir = ".venv/.ruff_cache"
+include = [
+    "custom_components/*",
+]
+extend-exclude = [
+    ".venv",
+    "*.yaml",
+    "*.md",
+    "*.json",
+    "*.png",
+    "*.svg"
+]
+
+# Assume Python 3.14
+target-version = "py314"
+
+[tool.ruff.lint]
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes by default.
+select = ["E", "F", "D101", "D104", "D105", "D106", "W291", "W292", "I001"]
+
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 120
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+
+[tool.mypy]
+cache_dir = ".venv/.mypy_cache"
+show_column_numbers = true
+explicit_package_bases = true
+plugins = ["pydantic.mypy"]
+strict = true
+follow_imports = "normal"
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = false
+no_implicit_reexport = false
+disallow_untyped_defs = true
+ignore_missing_imports = true
+implicit_optional = false
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+
+[tool.poetry.dependencies]
+python = ">=3.14.3,<4.0"
+taskipy = "^1.14.1"
+homeassistant = "^2026.10.2"
+pydantic = "^2.13.5"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.17.1"
+mypy = "^2.4.0"
+
+
+[tool.poetry.group.test.dependencies]
+pytest = "9.0.3"
+dictdiffer = "^0.10.0"
+pytest-env = "^1.7.1"
+pytest-cov = "^7.1.0"
+pytest-aiohttp = "^1.1.0"
+pytest-homeassistant-custom-component = "^0.13.355"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

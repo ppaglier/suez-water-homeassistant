@@ -1,0 +1,15 @@
+{
+  "domain": "suez_water",
+  "name": "Suez Water",
+  "after_dependencies": ["recorder"],
+  "categories": ["water.meters_leak_detection"],
+  "codeowners": ["@ppaglier"],
+  "config_flow": true,
+  "connectivity": ["cloud"],
+  "documentation": "https://github.com/ppaglier/suez-water-homeassistant",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["pysuez", "regex"],
+  "quality_scale": "bronze",
+  "requirements": ["pysuezV2==2.0.8"]
+}

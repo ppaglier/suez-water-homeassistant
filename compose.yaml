@@ -1,0 +1,25 @@
+networks:
+  default:
+    name: suez-water-homeassistant_default
+    driver: bridge
+
+volumes:
+  ha_venv:
+  ha_config:
+
+services:
+  suez-water-homeassistant:
+    container_name: suez-water-homeassistant
+    build:
+      context: .
+      target: dev
+    restart: on-failure
+    networks:
+      default:
+    ports:
+      - 80:80
+    volumes:
+      - .:/app
+      - ha_venv:/app/.venv
+      - ha_config:/config
+      - ./custom_components/suez_water:/config/custom_components/suez_water:ro

@@ -1,0 +1,22 @@
+name: 'Hassfest Validation'
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - 'main'
+      - 'dev'
+  schedule:
+    # Every day at midnight
+    - cron:  '0 0 * * *'
+
+jobs:
+  # https://developers.home-assistant.io/blog/2020/04/16/hassfest
+  validate-hassfest:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Checkout repository
+          uses: actions/checkout@v7
+
+        - name: Run hassfest validation
+          uses: home-assistant/actions/hassfest@master
