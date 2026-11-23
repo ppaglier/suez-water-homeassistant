@@ -5,9 +5,12 @@ from datetime import date, datetime
 import logging
 from typing import override
 
-from pysuez import PySuezError, SuezClient, TelemetryMeasure
+from custom_components.suez_water.pysuezv2.models import TelemetryMeasure
+from custom_components.suez_water.pysuezv2.suez_client import SuezClient
+from custom_components.suez_water.pysuezv2.exception import PySuezError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from homeassistant.components.recorder import get_instance
+from homeassistant.helpers.recorder import get_instance
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMeanType,
@@ -31,7 +34,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_conversion import VolumeConverter
 
-from .const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
+from custom_components.suez_water.const import CONF_COUNTER_ID, DATA_REFRESH_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +91,7 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
             username=self.config_entry.data[CONF_USERNAME],
             password=self.config_entry.data[CONF_PASSWORD],
             counter_id=self.config_entry.data[CONF_COUNTER_ID],
+            session=async_get_clientsession(self.hass),
         )
         if not await self._suez_client.check_credentials():
             raise ConfigEntryError("Invalid credentials for suez water")

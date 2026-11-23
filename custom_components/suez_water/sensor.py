@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from typing import Any, override
 
-from pysuez.const import ATTRIBUTION
+from custom_components.suez_water.pysuezv2.const import ATTRIBUTION
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,8 +18,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_COUNTER_ID, DOMAIN
-from .coordinator import SuezWaterConfigEntry, SuezWaterCoordinator, SuezWaterData
+from custom_components.suez_water.const import CONF_COUNTER_ID, DOMAIN
+from custom_components.suez_water.coordinator import SuezWaterConfigEntry, SuezWaterCoordinator, SuezWaterData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -53,7 +53,7 @@ async def async_setup_entry(
     hass: HomeAssistant,
     entry: SuezWaterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
-) -> None:
+) -> bool:
     """Set up Suez Water sensor from a config entry."""
     coordinator = entry.runtime_data
     counter_id = entry.data[CONF_COUNTER_ID]
@@ -61,6 +61,8 @@ async def async_setup_entry(
     async_add_entities(
         SuezWaterSensor(coordinator, counter_id, description) for description in SENSORS
     )
+
+    return True
 
 
 class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):

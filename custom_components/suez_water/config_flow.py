@@ -3,14 +3,18 @@
 import logging
 from typing import Any, override
 
+from homeassistant.core import HomeAssistant
 import probatio
-from pysuez import PySuezError, SuezClient
 
+from custom_components.suez_water.pysuezv2.suez_client import SuezClient
+from custom_components.suez_water.pysuezv2.exception import PySuezError
+
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import CONF_COUNTER_ID, DOMAIN
+from custom_components.suez_water.const import CONF_COUNTER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,31 +27,32 @@ STEP_USER_DATA_SCHEMA = probatio.Schema(
 )
 
 
-async def validate_input(data: dict[str, Any]) -> None:
+async def validate_input(*, hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    try:
-        counter_id = data.get(CONF_COUNTER_ID)
-        client = SuezClient(
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-            counter_id,
-        )
-        try:
-            if not await client.check_credentials():
-                raise InvalidAuth
-        except PySuezError as ex:
-            raise CannotConnect from ex
 
-        if counter_id is None:
-            try:
-                data[CONF_COUNTER_ID] = await client.find_counter()
-            except PySuezError as ex:
-                raise CounterNotFound from ex
-    finally:
-        await client.close_session()
+    counter_id = data.get(CONF_COUNTER_ID)
+    client = SuezClient(
+        data[CONF_USERNAME],
+        data[CONF_PASSWORD],
+        counter_id,
+        session=async_get_clientsession(hass),
+    )
+    try:
+        if not await client.check_credentials():
+            raise InvalidAuth
+    except PySuezError as ex:
+        raise CannotConnect from ex
+
+    if counter_id is None:
+        try:
+            data[CONF_COUNTER_ID] = await client.find_counter()
+        except PySuezError as ex:
+            raise CounterNotFound from ex
+
+    await client.close_session()
 
 
 class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -64,7 +69,7 @@ class SuezWaterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await validate_input(user_input)
+                await validate_input(hass=self.hass, data=user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
